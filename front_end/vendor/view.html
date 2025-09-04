@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        .card {
+            display: inline-block;
+            background-color: blueviolet;
+            color: white;
+            padding: 10px;
+            width: 200px;
+
+            margin: 5px;
+        }
+
+        #parent {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        #parent>div {
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        .price::before {
+            content: "Rs.";
+            font-size: 16px;
+        }
+
+        .detail {
+            overflow: hidden;
+           
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+</head>
+
+<body>
+    <div id="parent"></div>
+    <script>
+        async function getProducts() {
+            const parentobj = document.getElementById("parent");
+            const token = sessionStorage.getItem("token");
+
+            if (!token) {
+                alert("Please login first");
+                location.href = "../login.html";
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:3000/product/getall", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "authorization": token
+                    }
+                });
+
+                const responseData = await response.json();
+                console.log("response data", responseData);
+
+                if (responseData.error === false) {
+                    for (let i = 0; i < responseData.data.length; i++) {
+                        const productData = responseData.data[i];
+                        parentobj.innerHTML += 
+                            `<div class="card">
+                        <img src="../${productData.impath}" alt="${productData.name}" width="150" height="150">
+                        <div class="name">${productData.name}</div>
+                        <div class="price">${productData.price}</div>
+                        <div class="detail">${productData.detail}</div>
+                        <div>
+                            <button> Edit </button>
+                            <button onclick='deleteProduct(${productData.pid})''>delete</button>
+
+                            </div>
+                    </div>`;
+
+                    }
+                } else {
+                    alert(responseData.message);
+                }
+            } catch (err) {
+                console.error("Error fetching products:", err);
+            }
+        }
+
+        getProducts();
+
+      async function deleteProduct(pid) {
+            if(!confirm("Are you sure you want to delete this product?")){
+                return;
+            }
+            token = sessionStorage.getItem("token");
+   const response = await fetch(`http://localhost:3000/product/delete/${pid}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    "authorization": token
+                }
+            });
+
+            responseData = await response.json();
+            console.log("response data", responseData);
+
+            if(responseData.error==false){
+                alert("Product deleted successfully");
+                location.reload();
+                return;
+            }
+            else{
+                alert("Product deletion failed, please try again"+responseData.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

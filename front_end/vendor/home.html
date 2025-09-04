@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+<body>
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <form method="post" onsubmit="upload();return false">
+
+            <input type="text" id="name" placeholder="Enter product name">
+            <input type="number" id="price" placeholder="Enter product price">
+            <textarea name="" id="detail" placeholder="product decription"></textarea>
+
+<button>upload</button>
+
+        </form>
+    </div>
+    <script>
+        async function upload(){
+            numobj=document.getElementById("name")
+            priceobj = document.getElementById("price")
+            detailobj = document.getElementById("detail")
+
+const payload={
+    name:numobj.value,
+    price:priceobj.value,
+    detail:detailobj.value}
+
+    const token=sessionStorage.getItem("token")
+        if(!token){
+            alert("token is not present, please login again");
+        }
+        const response=await fetch("http://localhost:3000/product/upload",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":token
+            },
+            body:JSON.stringify(payload)
+        })
+    
+        
+        const responseData=await response.json();
+        console.log("vendor name",responseData);
+
+if(responseData.error==false){
+    alert("product uploaded successfully");
+    nameobj.value="";
+    priceobj.value="";
+    detailobj.value="";
+}else{
+    alert("product upload failed, please try again",responseData.message);
+
+    }
+
+
+        }
+    </script>
+</body>
+</html>

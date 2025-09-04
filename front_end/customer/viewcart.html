@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+        .card {
+            display: inline-block;
+            background-color: blueviolet;
+            color: white;
+            padding: 10px;
+            width: 200px;
+
+            margin: 5px;
+        }
+
+        #parent {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        #parent>div {
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        .price::before {
+            content: "Rs.";
+            font-size: 16px;
+        }
+
+        .detail {
+            overflow: hidden;
+
+        }
+        #total {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <div id="total"></div>
+        <button>Place Order</button>
+    </div>
+    <div id="parent"></div>
+    <script>
+
+
+
+        async function getCart() {
+            let total = 0;
+            const token = sessionStorage.getItem("token");
+            const parentobj = document.getElementById("parent");
+            const totalobj = document.getElementById("total");
+            const response = await fetch('http://localhost:3000/cart/getall', {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "authorization": token
+                }
+            });
+
+            const responseData = await response.json();
+            console.log(responseData);
+
+            if (responseData.error === false) {
+                for (let i = 0; i < responseData.data.length; i++) {
+                    const productData = responseData.data[i];
+total += productData.price;
+                    const div = document.createElement("div");
+                    div.classList.add("card");
+                    div.innerHTML = `
+                        <img src="../${productData.impath}" alt="${productData.name}" width="150" height="150">
+                        <div class="name">${productData.name}</div>
+                        <div class="price">${productData.price}</div>
+                        <div class="detail">${productData.detail}</div>
+                        <div>
+                            <button onclick="addToCart(${productData.pid})">REMOVEITEM</button>
+                        </div>
+                    `;
+                    parentobj.appendChild(div);
+
+
+                }
+                totalobj.innerText = `Total Amount: Rs.${total}`;   
+            } else {
+                alert(responseData.message);
+            }
+        }
+
+        getCart();
+
+        async function addToCart(pid) {
+            token = sessionStorage.getItem("token");
+            if (!token) {
+                alert("Please login first");
+                location.href = "../login.html";
+                return;
+            }
+            const response = await fetch('http://localhost:3000/cart/add', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "authorization": token
+                },
+                body: JSON.stringify({ pid })
+            })
+            const responseData = await response.json();
+            if (responseData.error === false) {
+                alert("Product added to cart");
+            }
+            else {
+                alert(responseData.message);
+            }
+        }
+    </script>
+</body>
+
+</html>
